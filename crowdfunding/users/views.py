@@ -11,8 +11,16 @@ from .models import CustomUser
 from .serializers import CustomUserSerializer
 
 class CustomUserList(APIView):
-    def get(self, request): # Get all users
+    def get(self, request):
         users = CustomUser.objects.all()
+        search = request.query_params.get("search")
+        if search:
+            users = users.filter(
+                username__icontains=search
+                ) | users.filter(
+                    email__icontains=search
+                )
+        
         serializer = CustomUserSerializer(users, many=True)
         return Response(serializer.data)
 
