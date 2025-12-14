@@ -18,38 +18,17 @@ The technologies used are as follows:
 
 [Add a table of contents here]
 
-### How to create a user account on insomnia:
+### How to create a User Account on Insomnia:
 POST request on Insomnica
-enter this url https://inanos-crowdfunding-back-end-aa6cc4b6f11a.herokuapp.com/users/
+Enter this url: https://inanos-crowdfunding-back-end-aa6cc4b6f11a.herokuapp.com/users/
 
 **The minimum JSON details required:**
-```
 {
   "username": "enterUserName",
   "first_name": "enterFirstName",
   "last_name": "enterLastName",
   "email": "enterEmailAddress"
 }
-```
-To get a token for that user:
-https://inanos-crowdfunding-back-end-aa6cc4b6f11a.herokuapp.com/api-token-auth/
-
-Use the details of the user that was just made
-```
-{
-  "username": "newuser",
-  "password": "StrongPassword123"
-}
-```
-
-and you should get this success message, details will differ:
-```
-{
-  "token": "abc123...",
-  "user_id": 4,
-  "email": "newuser@example.com"
-}
-```
 
 ## Project Requirements (Part 1)
 - [x] Build an API using Django and Django Rest Framework (DRF)
@@ -76,18 +55,58 @@ and you should get this success message, details will differ:
   - [x] A comment to go along with the pledge from the user based on if they are anonymous or not
 
 **Authentication & Permissions**
-- [ ] Rules around update and delete functionality for fundraisers, pledges, comments and User accounts
-- [ ] Return relevant status codes for both successful and unsuccessful requests to the API, gracefully
-- [ ] Use token authentication with an endpoint that returns a token and the current user’s details
+- [x] Rules around update and delete functionality for fundraisers, pledges, comments and User accounts
+- [x] Return relevant status codes for both successful and unsuccessful requests to the API, gracefully
+- [x] Use token authentication with an endpoint that returns a token and the current user’s details
 
 :no_good_woman: This project does not handle real money transactions. :no_good_woman:
 
 ## Additional Features I've Added:
-- Search for all (or any one of the following) fundraisers, pledges, comments and users that exist in the database. Filter by categories (eg: open to pledges, less than $200.00, within 5KM of locaition)
-- Take the total monetary value of all the Pledges and show how much moeny is left to reach the goal
-- Calculate how many days are left until the deadline date and time has been reached
+- [x] Search for all (or any one of the following) fundraisers, pledges, comments and users that exist in the database. 
+- [x] Filter by categories (eg: open to pledges, less than $200.00, within 5KM of locaition)
+- [x] Take the total monetary value of all the Pledges and show how much money is left to reach the goal
+- [x] Calculate how many days are left until the deadline date and time has been reached
 
 ## API Spec
-|   |   |
-|---|---|
-|   |   |
+| URL                | HTTP Method | Purpose                                        | Request Body                                                                                                      | Success Response Code  | Authentication/Authorisation |
+| ------------------ | ----------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------- | ---------------------------- |
+| /users/            | GET         | List all user accounts                         | None                                                                                                              | 200 OK                 | Public (read-only)           |
+| /users/            | POST        | Create a new user account                      | `{ "username": "", "email": "", "password": "" }`                                                                 | 201 Created            | Public                       |
+| /users/<id>/       | GET         | Retrieve a single user account                 | None                                                                                                              | 200 OK                 | Public (read-only)           |
+| /api-token-auth/   | POST        | Log in and receive auth token and user details | `{ "username": "", "password": "" }`                                                                              | 200 OK                 | Public                       |
+| /fundraisers/      | GET         | List all fundraisers                           | None                                                                                                              | 200 OK                 | Public (read-only)           |
+| /fundraisers/      | POST        | Create a fundraiser                            | `{ "title": "", "description": "", "goal": 0, "image": "", "is_open": true, "deadline": "YYYY-MM-DDTHH:MM:SSZ" }` | 201 Created            | Token required               |
+| /fundraisers/<id>/ | GET         | Retrieve fundraiser details                    | None                                                                                                              | 200 OK                 | Public (read-only)           |
+| /fundraisers/<id>/ | PUT         | Update a fundraiser                            | Partial fundraiser fields (owner and date read-only)                                                              | 200 OK                 | Token required + owner only  |
+| /fundraisers/<id>/ | DELETE      | Delete a fundraiser                            | None                                                                                                              | 204 No Content         | Token required + owner only  |
+| /pledges/          | GET         | List all pledges                               | None                                                                                                              | 200 OK                 | Public (read-only)           |
+| /pledges/          | POST        | Create a pledge                                | `{ "amount": 0, "fundraiser": <id>, "anonymous": false, "comment": "" }`                                          | 201 Created            | Token required               |
+| /pledges/<id>/     | GET         | Retrieve a single pledge                       | None                                                                                                              | 200 OK                 | Public (read-only)           |
+| /pledges/<id>/     | PUT         | Update a pledge (not permitted)                | Any                                                                                                               | 405 Method Not Allowed | Token required               |
+| /pledges/<id>/     | DELETE      | Delete a pledge (not permitted)                | None                                                                                                              | 405 Method Not Allowed | Token required               |
+| /comments/         | GET         | List all comments                              | None                                                                                                              | 200 OK                 | Public (read-only)           |
+| /comments/         | POST        | Create a comment or reply                      | `{ "fundraiser": <id>, "content": "", "parent": <id or null> }`                                                   | 201 Created            | Token required               |
+| /comments/<id>/    | GET         | Retrieve a single comment                      | None                                                                                                              | 200 OK                 | Public (read-only)           |
+| /comments/<id>/    | PUT         | Update a comment                               | `{ "content": "" }`                                                                                               | 200 OK                 | Token required + author only |
+| /comments/<id>/    | DELETE      | Delete a comment                               | None                                                                                                              | 204 No Content         | Token required + author only |
+
+## End Point Demonstration
+![Insomnia API endpoints demo](insomnia_imgs/all_endpoints.gif)
+If the gif betrays me here are the screenshots....
+
+## Database Schema
+| Table          | Primary Key | Fields                                                                         | Foreign Keys                                                                                      |
+| -------------- | ----------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| **CustomUser** | `id`        | `username`, `email`, `password` (plus other `AbstractUser` fields)             | None                                                                                              |
+| **Fundraiser** | `id`        | `title`, `description`, `goal`, `image`, `is_open`, `date_created`, `deadline` | `owner_id → CustomUser.id`                                                                        |
+| **Pledge**     | `id`        | `amount`, `comment`, `anonymous`                                               | `fundraiser_id → Fundraiser.id`, `supporter_id → CustomUser.id`                                   |
+| **Comment**    | `id`        | `content`, `anonymous`, `date_created`                                         | `fundraiser_id → Fundraiser.id`, `author_id → CustomUser.id`, `parent_id → Comment.id` (nullable) |
+
+| Relationship               | Notation                               | Meaning                                                                               | Connects via                   |
+| -------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------ |
+| User owns Fundraisers      | `CustomUser (1) ──< Fundraiser (0..*)` | One user can own many fundraisers; each fundraiser has exactly one owner              | `Fundraiser.owner_id`          |
+| Fundraiser has Pledges     | `Fundraiser (1) ──< Pledge (0..*)`     | One fundraiser can have many pledges; each pledge belongs to exactly one fundraiser   | `Pledge.fundraiser_id`         |
+| User makes Pledges         | `CustomUser (1) ──< Pledge (0..*)`     | One user can make many pledges; each pledge has exactly one supporter                 | `Pledge.supporter_id`          |
+| Fundraiser has Comments    | `Fundraiser (1) ──< Comment (0..*)`    | One fundraiser can have many comments; each comment belongs to exactly one fundraiser | `Comment.fundraiser_id`        |
+| User writes Comments       | `CustomUser (1) ──< Comment (0..*)`    | One user can write many comments; each comment has exactly one author                 | `Comment.author_id`            |
+| Comment replies to Comment | `Comment (0..1) ──< Comment (0..*)`    | A comment may have zero or one parent; a parent comment can have many replies         | `Comment.parent_id` (nullable) |

@@ -12,6 +12,29 @@ class FundraiserList(APIView):
 
     def get(self, request):
         fundraisers = Fundraiser.objects.all()
+
+        is_open = request.query_params.get("is_open")
+        if is_open is not None:
+            fundraisers = fundraisers.filter(is_open=(is_open.lower() == "true"))
+
+        goal_lte = request.query_params.get("goal_lte")
+        if goal_lte:
+            fundraisers = fundraisers.filter(goal__lte=int(goal_lte))
+
+        goal_gte = request.query_params.get("goal_gte")
+        if goal_gte:
+            fundraisers = fundraisers.filter(goal__gte=int(goal_gte))
+
+        owner = request.query_params.get("owner")
+        if owner:
+            fundraisers = fundraisers.filter(owner__id=int(owner))
+
+        has_deadline = request.query_params.get("has_deadline")
+        if has_deadline is not None:
+            if has_deadline.lower() == "true":
+                fundraisers = fundraisers.exclude(deadline=None)
+            else:
+                fundraisers = fundraisers.filter(deadline=None)
         
         search = request.query_params.get("search")
         if search:
@@ -86,6 +109,22 @@ class PledgeList(APIView):
     def get(self, request):
         pledges = Pledge.objects.all()
 
+        fundraiser_id = request.query_params.get("fundraiser")
+        if fundraiser_id:
+            pledges = pledges.filter(fundraiser__id=int(fundraiser_id))
+
+        supporter_id = request.query_params.get("supporter")
+        if supporter_id:
+            pledges = pledges.filter(supporter__id=int(supporter_id))
+
+        anonymous = request.query_params.get("anonymous")
+        if anonymous is not None:
+            pledges = pledges.filter(anonymous=(anonymous.lower() == "true"))
+
+        amount_lte = request.query_params.get("amount_lte")
+        if amount_lte:
+            pledges = pledges.filter(amount__lte=int(amount_lte))
+
         search = request.query_params.get("search")
         if search:
             pledges = pledges.filter(comment__icontains=search)
@@ -154,6 +193,18 @@ class CommentList(APIView):
         fundraiser_id = request.query_params.get("fundraiser")
         if fundraiser_id:
             comments = comments.filter(fundraiser_id=fundraiser_id)
+        
+        author_id = request.query_params.get("author")
+        if author_id:
+            comments = comments.filter(author__id=int(author_id))
+
+        anonymous = request.query_params.get("anonymous")
+        if anonymous is not None:
+            comments = comments.filter(anonymous=(anonymous.lower() == "true"))
+
+        search = request.query_params.get("search")
+        if search:
+            comments = comments.filter(content__icontains=search)
 
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)

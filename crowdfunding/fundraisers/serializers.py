@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django.apps import apps
 
-
 class PledgeSerializer(serializers.ModelSerializer):
     supporter = serializers.ReadOnlyField(source="supporter.id")
 
@@ -57,3 +56,7 @@ class FundraiserDetailSerializer(FundraiserSerializer):
         instance.save()
         return instance
     
+    days_left = serializers.SerializerMethodField()
+
+    def get_days_left(self, instance):
+        return instance.days_left()

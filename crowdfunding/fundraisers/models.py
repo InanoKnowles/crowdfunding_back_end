@@ -13,7 +13,15 @@ class Fundraiser(models.Model):
         get_user_model(),
         on_delete=models.CASCADE,
         related_name='owned_fundraisers'
-)
+    )
+
+    def days_left(self):
+        if self.deadline is None:
+            return None
+        delta = self.deadline - self.date_created
+        return delta.days if delta.days > 0 else 0
+    
+
     def __str__(self):
         return self.title
 
