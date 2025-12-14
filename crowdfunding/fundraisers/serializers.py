@@ -16,7 +16,26 @@ class PledgeSerializer(serializers.ModelSerializer):
         instance.fundraiser = validated_data.get("fundraiser", instance.fundraiser)
         instance.save()
         return instance
+    
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source="author.id")
+    replies = serializers.SerializerMethodField()
 
+    class Meta:
+        model = apps.get_model("fundraisers.Comment")
+        fields = "__all__"
+
+    def get_replies(self, instance):
+        replies = instance.replies.all()
+        serializer = CommentSerializer(replies, many=True)
+        return serializer.data
+
+    def update(self, instance, validated_data):
+        instance.content = validated_data.get("content", instance.content)
+        instance.parent = validated_data.get("parent", instance.parent)
+        instance.fundraiser = validated_data.get("fundraiser", instance.fundraiser)
+        instance.save()
+        return instance
 
 class FundraiserSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
@@ -37,3 +56,4 @@ class FundraiserDetailSerializer(FundraiserSerializer):
         instance.is_open = validated_data.get("is_open", instance.is_open)
         instance.save()
         return instance
+    
