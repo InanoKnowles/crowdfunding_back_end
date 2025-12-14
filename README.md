@@ -15,20 +15,29 @@ The technologies used are as follows:
 | Target Audience(s): | Homeless People in Australia                                                        |
 | Website Uses:       | Users can create and browse fundraisers, and support them by making pledges.        |
 
+## Table of Contents:
+- [Crowdfunding Back End](#crowdfunding-back-end)
+  - [Project Details:](#project-details)
+  - [Table of Contents:](#table-of-contents)
+    - [How to create a User Account on Insomnia:](#how-to-create-a-user-account-on-insomnia)
+  - [Project Requirements (Part 1)](#project-requirements-part-1)
+  - [Additional Features I've Added:](#additional-features-ive-added)
+  - [API Spec](#api-spec)
+  - [End Point Demonstration](#end-point-demonstration)
+  - [Database Schema](#database-schema)
 
-[Add a table of contents here]
+
 
 ### How to create a User Account on Insomnia:
-POST request on Insomnica
-Enter this url: https://inanos-crowdfunding-back-end-aa6cc4b6f11a.herokuapp.com/users/
+1. POST request on Insomnia
+2. Enter this url: https://inanos-crowdfunding-back-end-aa6cc4b6f11a.herokuapp.com/users/
+3. {
+     "username": "enterUserName",
+     "first_name": "enterFirstName",
+     "last_name": "enterLastName",
+     "email": "enterEmailAddress"
+   }
 
-**The minimum JSON details required:**
-{
-  "username": "enterUserName",
-  "first_name": "enterFirstName",
-  "last_name": "enterLastName",
-  "email": "enterEmailAddress"
-}
 
 ## Project Requirements (Part 1)
 - [x] Build an API using Django and Django Rest Framework (DRF)
@@ -59,13 +68,16 @@ Enter this url: https://inanos-crowdfunding-back-end-aa6cc4b6f11a.herokuapp.com/
 - [x] Return relevant status codes for both successful and unsuccessful requests to the API, gracefully
 - [x] Use token authentication with an endpoint that returns a token and the current user’s details
 
+
 :no_good_woman: This project does not handle real money transactions. :no_good_woman:
+
 
 ## Additional Features I've Added:
 - [x] Search for all (or any one of the following) fundraisers, pledges, comments and users that exist in the database. 
 - [x] Filter by categories (eg: open to pledges, less than $200.00, within 5KM of locaition)
 - [x] Take the total monetary value of all the Pledges and show how much money is left to reach the goal
 - [x] Calculate how many days are left until the deadline date and time has been reached
+
 
 ## API Spec
 | URL                | HTTP Method | Purpose                                        | Request Body                                                                                                      | Success Response Code  | Authentication/Authorisation |
@@ -90,9 +102,10 @@ Enter this url: https://inanos-crowdfunding-back-end-aa6cc4b6f11a.herokuapp.com/
 | /comments/<id>/    | PUT         | Update a comment                               | `{ "content": "" }`                                                                                               | 200 OK                 | Token required + author only |
 | /comments/<id>/    | DELETE      | Delete a comment                               | None                                                                                                              | 204 No Content         | Token required + author only |
 
+
 ## End Point Demonstration
-![Insomnia API endpoints demo](insomnia_imgs/all_endpoints.gif)
-If the gif betrays me here are the screenshots....
+![Insomnia API endpoints demo](crowdfunding/insomnia_imgs/all_endpoints.gif)
+
 
 ## Database Schema
 | Table          | Primary Key | Fields                                                                         | Foreign Keys                                                                                      |
