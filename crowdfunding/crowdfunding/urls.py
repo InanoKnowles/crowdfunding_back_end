@@ -17,12 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from users.views import CustomAuthToken
+from django.http import JsonResponse
+
+def home(request):
+    return JsonResponse({"status": "ok"})
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('fundraisers.urls')),
-    path('', include('users.urls')),
-    path('api-token-auth/', CustomAuthToken.as_view(), name='api_token_auth'),
+    path("", home),
+    path("admin/", admin.site.urls),
+    path("", include("fundraisers.urls")),
+    path("", include("users.urls")),
+    path("api-token-auth/", CustomAuthToken.as_view(), name="api_token_auth"),
 ]
 
 handler404 = "fundraisers.views.custom_404"

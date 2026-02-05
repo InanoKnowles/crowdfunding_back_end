@@ -2,10 +2,17 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django.http import Http404
+from django.http import Http404, JsonResponse
+
 from .models import Fundraiser, Pledge, Comment
-from .serializers import FundraiserSerializer, FundraiserDetailSerializer, PledgeSerializer, CommentSerializer
+from .serializers import (
+    FundraiserSerializer,
+    FundraiserDetailSerializer,
+    PledgeSerializer,
+    CommentSerializer,
+)
 from .permissions import IsOwnerOrReadOnly, IsSupporterOrReadOnly, IsAuthorOrReadOnly
+
 
 class FundraiserList(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -35,12 +42,10 @@ class FundraiserList(APIView):
                 fundraisers = fundraisers.exclude(deadline=None)
             else:
                 fundraisers = fundraisers.filter(deadline=None)
-        
+
         search = request.query_params.get("search")
         if search:
-            fundraisers = fundraisers.filter(
-                title__icontains=search
-            ) | fundraisers.filter(
+            fundraisers = fundraisers.filter(title__icontains=search) | fundraisers.filter(
                 description__icontains=search
             )
 
@@ -53,12 +58,13 @@ class FundraiserList(APIView):
             serializer.save(owner=request.user)
             return Response(
                 serializer.data,
-            status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED
             )
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
 
 class FundraiserDetail(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
@@ -193,7 +199,7 @@ class CommentList(APIView):
         fundraiser_id = request.query_params.get("fundraiser")
         if fundraiser_id:
             comments = comments.filter(fundraiser_id=fundraiser_id)
-        
+
         author_id = request.query_params.get("author")
         if author_id:
             comments = comments.filter(author__id=int(author_id))
@@ -264,8 +270,9 @@ class CommentDetail(APIView):
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 def custom_404(request, exception):
-    return Response(
+    return JsonResponse(
         {"detail": "Alas, the requested resource cannot be found."},
-        status=status.HTTP_404_NOT_FOUND
+        status=404
     )

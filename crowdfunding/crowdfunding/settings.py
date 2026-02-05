@@ -149,3 +149,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+ALLOWED_HOSTS = ["inanos-crowdfunding-back-end-aa6cc4b6f11a.herokuapp.com", "localhost", "127.0.0.1"]
