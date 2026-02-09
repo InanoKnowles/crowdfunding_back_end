@@ -22,26 +22,23 @@ class Fundraiser(models.Model):
     def __str__(self):
         return self.title
 
-    def total_pledged(self) -> int:
+    def total_pledged(self):
         return self.pledges.aggregate(total=Sum("amount"))["total"] or 0
 
-    def is_deadline_passed(self) -> bool:
+    def is_deadline_passed(self):
         return self.deadline is not None and timezone.now() >= self.deadline
 
-    def is_goal_reached(self) -> bool:
+    def is_goal_reached(self):
         return self.total_pledged() >= self.goal
 
-    def is_accepting_pledges(self) -> bool:
-        return self.is_open and (not self.is_deadline_passed()) and (not self.is_goal_reached())
+    def is_accepting_pledges(self):
+        return self.is_open and not self.is_deadline_passed() and not self.is_goal_reached()
 
     def days_left(self):
         if self.deadline is None:
             return None
         delta = self.deadline - timezone.now()
         return max(delta.days, 0)
-    
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
 
     def refresh_open_status(self, save=True):
         should_close = self.is_goal_reached() or self.is_deadline_passed()
@@ -65,7 +62,6 @@ class Pledge(models.Model):
         on_delete=models.CASCADE,
         related_name="pledges",
     )
-
     anonymous = models.BooleanField(default=False)
     comment = models.TextField(blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
@@ -74,15 +70,8 @@ class Pledge(models.Model):
         return f"{self.amount} to {self.fundraiser}"
 
     def save(self, *args, **kwargs):
-        """
-        After saving a pledge, ensure fundraiser status is updated.
-        If total pledged >= goal, fundraiser closes automatically.
-        """
         super().save(*args, **kwargs)
-        self.fundraiser.update_status(save=True)
-
-    def perform_create(self, serializer):
-        serializer.save(supporter=self.request.user)
+        self.fundraiser.refresh_open_status(save=True)
 
 
 class Comment(models.Model):
@@ -103,7 +92,6 @@ class Comment(models.Model):
         blank=True,
         related_name="replies",
     )
-
     content = models.TextField()
     anonymous = models.BooleanField(default=False)
     date_created = models.DateTimeField(auto_now_add=True)
