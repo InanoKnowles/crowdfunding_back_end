@@ -42,6 +42,7 @@ class FundraiserSerializer(serializers.ModelSerializer):
 
     total_pledged = serializers.SerializerMethodField()
     progress = serializers.SerializerMethodField()
+    computed_is_open = serializers.SerializerMethodField()
 
     class Meta:
         model = apps.get_model("fundraisers.Fundraiser")
@@ -63,6 +64,11 @@ class FundraiserDetailSerializer(FundraiserSerializer):
 
     def get_days_left(self, instance):
         return instance.days_left()
+    
+    def get_computed_is_open(self, instance):
+        if instance.is_deadline_passed() or instance.is_goal_reached():
+            return False
+        return bool(instance.is_open)
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get("title", instance.title)

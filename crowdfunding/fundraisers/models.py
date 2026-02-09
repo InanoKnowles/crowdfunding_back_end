@@ -43,19 +43,13 @@ class Fundraiser(models.Model):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    def update_status(self, save: bool = True) -> bool:
-        """
-        Closes fundraiser if goal is reached or deadline has passed.
-        Returns True if a change was made.
-        """
+    def refresh_open_status(self, save=True):
         should_close = self.is_goal_reached() or self.is_deadline_passed()
-
         if should_close and self.is_open:
             self.is_open = False
             if save:
                 self.save(update_fields=["is_open"])
             return True
-
         return False
 
 
