@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.apps import apps
 
+
 class PledgeSerializer(serializers.ModelSerializer):
     supporter = serializers.ReadOnlyField(source="supporter.id")
     supporter_username = serializers.ReadOnlyField(source="supporter.username")
@@ -16,6 +17,7 @@ class PledgeSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.id")
     author_username = serializers.ReadOnlyField(source="author.username")
@@ -26,8 +28,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_replies(self, instance):
-        replies = instance.replies.all()
-        serializer = CommentSerializer(replies, many=True)
+        serializer = CommentSerializer(instance.replies.all(), many=True)
         return serializer.data
 
     def update(self, instance, validated_data):
@@ -35,6 +36,7 @@ class CommentSerializer(serializers.ModelSerializer):
         instance.parent = validated_data.get("parent", instance.parent)
         instance.save()
         return instance
+
 
 class FundraiserSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
@@ -49,26 +51,38 @@ class FundraiserSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_total_pledged(self, instance):
-        return instance.total_pledged()
+        try:
+            return instance.total_pledged()
+        except Exception:
+            return 0
 
     def get_progress(self, instance):
-        goal = instance.goal or 0
-        if goal <= 0:
+        try:
+            goal = instance.goal or 0
+            if goal <= 0:
+                return 0
+            return min(100, round((instance.total_pledged() / goal) * 100))
+        except Exception:
             return 0
-        return min(100, round((instance.total_pledged() / goal) * 100))
+
+    def get_computed_is_open(self, instance):
+        try:
+            if instance.is_deadline_passed() or instance.is_goal_reached():
+                return False
+            return bool(instance.is_open)
+        except Exception:
+            return False
+
 
 class FundraiserDetailSerializer(FundraiserSerializer):
     pledges = PledgeSerializer(many=True, read_only=True)
-
     days_left = serializers.SerializerMethodField()
 
     def get_days_left(self, instance):
-        return instance.days_left()
-    
-    def get_computed_is_open(self, instance):
-        if instance.is_deadline_passed() or instance.is_goal_reached():
-            return False
-        return bool(instance.is_open)
+        try:
+            return instance.days_left()
+        except Exception:
+            return None
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get("title", instance.title)
