@@ -13,10 +13,10 @@ class PledgeSerializer(serializers.ModelSerializer):
         instance.amount = validated_data.get("amount", instance.amount)
         instance.comment = validated_data.get("comment", instance.comment)
         instance.anonymous = validated_data.get("anonymous", instance.anonymous)
-        instance.fundraiser = validated_data.get("fundraiser", instance.fundraiser)
         instance.save()
         return instance
-    
+
+
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.id")
     author_username = serializers.ReadOnlyField(source="author.username")
@@ -34,21 +34,38 @@ class CommentSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.content = validated_data.get("content", instance.content)
         instance.parent = validated_data.get("parent", instance.parent)
-        instance.fundraiser = validated_data.get("fundraiser", instance.fundraiser)
         instance.save()
         return instance
+
 
 class FundraiserSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
     owner_username = serializers.ReadOnlyField(source="owner.username")
 
+    total_pledged = serializers.SerializerMethodField()
+    progress = serializers.SerializerMethodField()
+
     class Meta:
         model = apps.get_model("fundraisers.Fundraiser")
         fields = "__all__"
 
+    def get_total_pledged(self, instance):
+        return instance.total_pledged()
+
+    def get_progress(self, instance):
+        goal = instance.goal or 0
+        if goal <= 0:
+            return 0
+        return min(100, round((instance.total_pledged() / goal) * 100))
+
 
 class FundraiserDetailSerializer(FundraiserSerializer):
     pledges = PledgeSerializer(many=True, read_only=True)
+
+    days_left = serializers.SerializerMethodField()
+
+    def get_days_left(self, instance):
+        return instance.days_left()
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get("title", instance.title)
@@ -56,10 +73,6 @@ class FundraiserDetailSerializer(FundraiserSerializer):
         instance.goal = validated_data.get("goal", instance.goal)
         instance.image = validated_data.get("image", instance.image)
         instance.is_open = validated_data.get("is_open", instance.is_open)
+        instance.deadline = validated_data.get("deadline", instance.deadline)
         instance.save()
         return instance
-    
-    days_left = serializers.SerializerMethodField()
-
-    def get_days_left(self, instance):
-        return instance.days_left()
