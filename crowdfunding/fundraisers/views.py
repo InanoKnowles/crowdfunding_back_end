@@ -12,6 +12,12 @@ from .serializers import (
 )
 from .permissions import IsOwnerOrReadOnly, IsAuthorOrReadOnly
 
+class ContactView(APIView):
+    def post(self, request):
+        return Response(
+            {"detail": "Message received"},
+            status=status.HTTP_200_OK
+        )
 
 class FundraiserList(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
