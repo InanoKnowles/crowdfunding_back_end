@@ -16,7 +16,6 @@ class PledgeSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.id")
     author_username = serializers.ReadOnlyField(source="author.username")
@@ -37,7 +36,6 @@ class CommentSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class FundraiserSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
     owner_username = serializers.ReadOnlyField(source="owner.username")
@@ -57,7 +55,6 @@ class FundraiserSerializer(serializers.ModelSerializer):
         if goal <= 0:
             return 0
         return min(100, round((instance.total_pledged() / goal) * 100))
-
 
 class FundraiserDetailSerializer(FundraiserSerializer):
     pledges = PledgeSerializer(many=True, read_only=True)
