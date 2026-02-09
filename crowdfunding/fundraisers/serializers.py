@@ -3,6 +3,7 @@ from django.apps import apps
 
 class PledgeSerializer(serializers.ModelSerializer):
     supporter = serializers.ReadOnlyField(source="supporter.id")
+    supporter_username = serializers.ReadOnlyField(source="supporter.username")
 
     class Meta:
         model = apps.get_model("fundraisers.Pledge")
@@ -18,6 +19,7 @@ class PledgeSerializer(serializers.ModelSerializer):
     
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.id")
+    author_username = serializers.ReadOnlyField(source="author.username")
     replies = serializers.SerializerMethodField()
 
     class Meta:
@@ -38,6 +40,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class FundraiserSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
+    owner_username = serializers.ReadOnlyField(source="owner.username")
 
     class Meta:
         model = apps.get_model("fundraisers.Fundraiser")

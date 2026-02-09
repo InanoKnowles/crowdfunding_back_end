@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
+from django.db.models import Sum
 
 class Fundraiser(models.Model):
     title = models.CharField(max_length=200)
@@ -20,10 +22,21 @@ class Fundraiser(models.Model):
             return None
         delta = self.deadline - self.date_created
         return delta.days if delta.days > 0 else 0
-    
 
     def __str__(self):
         return self.title
+    
+    def total_pledged(self):
+        return self.pledges.aggregate(total=Sum("amount"))["total"] or 0
+
+    def is_deadline_passed(self):
+        return self.deadline is not None and timezone.now() >= self.deadline
+
+    def is_goal_reached(self):
+        return self.total_pledged() >= self.goal
+
+    def is_accepting_pledges(self):
+        return self.is_open and (not self.is_deadline_passed()) and (not self.is_goal_reached())
 
 class Pledge(models.Model):
     amount = models.IntegerField()
@@ -41,6 +54,7 @@ class Pledge(models.Model):
     )
     anonymous = models.BooleanField(default=False)
     comment = models.TextField(blank=True)
+    date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.amount} to {self.fundraiser}"

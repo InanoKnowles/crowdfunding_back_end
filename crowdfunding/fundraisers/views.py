@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.http import Http404, JsonResponse
-
+from django.utils import timezone
 from .models import Fundraiser, Pledge, Comment
 from .serializers import (
     FundraiserSerializer,
@@ -139,26 +139,65 @@ class PledgeList(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "You must be logged in to make a pledge."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         serializer = PledgeSerializer(data=request.data)
-        if serializer.is_valid():
-            fundraiser = serializer.validated_data["fundraiser"]
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            if fundraiser.owner == request.user:
-                return Response(
-                    {"detail": "You cannot pledge to your own fundraiser."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        fundraiser = serializer.validated_data["fundraiser"]
+        amount = serializer.validated_data["amount"]
 
-            if not fundraiser.is_open:
-                return Response(
-                    {"detail": "This fundraiser is closed to new pledges."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if fundraiser.owner == request.user:
+            return Response(
+                {"detail": "You cannot pledge to your own fundraiser."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-            serializer.save(supporter=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if fundraiser.deadline and timezone.now() >= fundraiser.deadline:
+            fundraiser.is_open = False
+            fundraiser.save()
+            return Response(
+                {
+                    "detail": "This fundraiser has reached its deadline and is now closed. Thank you for your support."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        total_pledged = fundraiser.total_pledged()
+
+        if total_pledged >= fundraiser.goal:
+            fundraiser.is_open = False
+            fundraiser.save()
+            return Response(
+                {
+                    "detail": "This fundraiser has already reached its target amount and is now closed. Thank you for your generosity."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if total_pledged + amount > fundraiser.goal:
+            return Response(
+                {
+                    "detail": "Thank you for your generosity, but this fundraiser only needs the set target amount."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pledge = serializer.save(supporter=request.user)
+
+        if fundraiser.total_pledged() >= fundraiser.goal:
+            fundraiser.is_open = False
+            fundraiser.save()
+
+        return Response(
+            PledgeSerializer(pledge).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class PledgeDetail(APIView):
