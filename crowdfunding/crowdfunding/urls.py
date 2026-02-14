@@ -30,7 +30,7 @@ urlpatterns = [
     path("", include("fundraisers.urls")),
     path("", include("users.urls")),
     path("api-token-auth/", CustomAuthToken.as_view(), name="api_token_auth"),
-    re_path(r'^.*$', TemplateView.as_view(template_name="main.html")),
+    re_path(r'^.*$', TemplateView.as_view(template_name="manage.py")),
 ]
 
 handler404 = "fundraisers.views.custom_404"
