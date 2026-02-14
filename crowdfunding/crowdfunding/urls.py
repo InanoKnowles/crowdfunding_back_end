@@ -18,8 +18,6 @@ from django.contrib import admin
 from django.urls import path, include
 from users.views import CustomAuthToken
 from django.http import JsonResponse
-from django.views.generic import TemplateView
-from django.urls import re_path
 
 def home(request):
     return JsonResponse({"status": "ok"})
@@ -30,7 +28,6 @@ urlpatterns = [
     path("", include("fundraisers.urls")),
     path("", include("users.urls")),
     path("api-token-auth/", CustomAuthToken.as_view(), name="api_token_auth"),
-    re_path(r'^.*$', TemplateView.as_view(template_name="manage.py")),
 ]
 
 handler404 = "fundraisers.views.custom_404"
